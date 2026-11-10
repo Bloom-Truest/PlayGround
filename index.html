@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090b0d" />
+  <title>ASHEN OATH — The Shattered March</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="game-shell">
+    <canvas id="game"></canvas>
+    <div class="vignette"></div>
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="Ashen Oath home"><span class="sigil">✳</span><span>ASHEN <b>OATH</b></span></a>
+      <div class="top-center"><span class="chapter">THE SHATTERED MARCH</span><span class="divider"></span><span id="region-name">CINDERFALL — OUTER KEEP</span></div>
+      <button class="icon-button" id="sound-btn" title="Toggle sound" aria-label="Toggle sound">♫</button>
+    </header>
+
+    <section class="intro" id="intro">
+      <div class="eyebrow"><i></i> A SOULS-LIKE ARENA BEAT-'EM-UP <i></i></div>
+      <h1>THE SHATTERED<br><em>MARCH</em></h1>
+      <p class="intro-copy">Twenty warlords. One dying kingdom.<br>Take back the road, one blade at a time.</p>
+      <div class="intro-actions"><button class="primary-button" id="start-btn">ENTER THE MARCH <span>↗</span></button><span class="launch-note"><b>20</b> BOSSES · 5 REALMS · NO MERCY</span></div>
+      <div class="intro-bottom"><span>AN ORIGINAL DARK FANTASY ADVENTURE</span><span>v 1.0.0 — THE FIRST CRUSADE</span></div>
+    </section>
+
+    <section class="hud hidden" id="hud">
+      <div class="player-panel">
+        <div class="player-icon">✦</div>
+        <div class="player-bars"><div class="bar-label"><span>ASHEN WANDERER</span><span id="level-label">LV. 01</span></div><div class="bar hp"><i id="player-hp"></i></div><div class="bar stamina"><i id="player-stamina"></i></div></div>
+      </div>
+      <div class="boss-panel"><div class="boss-title"><span id="boss-title">THE HOLLOW WARDEN</span><span id="boss-index">01 / 20</span></div><div class="bar boss-hp"><i id="boss-hp"></i></div><div class="boss-subtitle" id="boss-subtitle">Warden of the Cinder Gate</div></div>
+      <div class="hud-right"><div class="rune-count"><span class="rune-icon">◈</span><span id="rune-count">000</span><small>RUNES</small></div><button id="pause-btn" class="pause-button">Ⅱ</button></div>
+      <div id="toast" class="toast"></div>
+      <div class="combat-log" id="combat-log">THE GATE STIRS…</div>
+      <div class="controls-hint"><span><kbd>WASD</kbd> MOVE</span><span><kbd>CLICK</kbd> STRIKE</span><span><kbd>Q</kbd> HEAVY</span><span><kbd>SPACE</kbd> DODGE</span><span><kbd>E</kbd> ASHEN BURST</span></div>
+      <div class="mobile-controls" id="mobile-controls"><div class="stick-zone" id="stick-zone"><div class="stick" id="stick"></div></div><div class="mobile-actions"><button data-action="dodge">DODGE</button><button data-action="ability">ASH</button><button data-action="heavy">HEAVY</button><button data-action="attack">STRIKE</button></div></div>
+    </section>
+
+    <section class="overlay hidden" id="pause-overlay"><div class="modal-card"><div class="eyebrow">A MOMENT OF QUIET</div><h2>TAKE A BREATH</h2><p>The March will wait. The warlords will not.</p><div class="modal-actions"><button class="primary-button" id="resume-btn">RETURN TO BATTLE</button><button class="text-button" id="restart-btn">RESTART THE MARCH</button></div><span class="modal-foot">WASD MOVE · CLICK STRIKE · Q HEAVY · SPACE DODGE · E ASHEN BURST</span></div></section>
+
+    <section class="overlay hidden" id="result-overlay"><div class="modal-card result-card"><div class="eyebrow" id="result-eyebrow">THE ROAD IS YOURS</div><h2 id="result-title">VICTORY</h2><p id="result-copy">The first gate falls. The march goes on.</p><div class="reward-line"><span>✦</span><b id="result-reward">+120 RUNES</b></div><div class="modal-actions"><button class="primary-button" id="continue-btn">CONTINUE THE MARCH <span>↗</span></button><button class="text-button" id="retry-btn">RISE AGAIN</button></div></div></section>
+
+    <div class="loading" id="loading"><span class="loader-mark">✳</span><span>SUMMONING THE MARCH</span></div>
+  </div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
