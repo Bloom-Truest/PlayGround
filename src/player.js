@@ -22,8 +22,6 @@ export class Player {
     this.pendingXp = 0;
     this.talents = { vitality:0, strength:0, arcane:0 };
     this.level = 1;
-    this.race = 'soulreaper';
-
     // state
     this.velocity = new THREE.Vector3();
     this.yaw = 0; this.pitch = 0;
@@ -60,11 +58,8 @@ export class Player {
     this.dodgeDir = new THREE.Vector3();
     this.dodgeTime = 0.5;
 
-    // race buffs
-    this.shikaiTimer = 0;
-    this.blutTimer = 0;
+    // dash cooldown
     this.flashCooldown = 0;
-    this.signatureCooldown = 0;
 
     this.toast = (msg) => { /* ui toast handled externally */ };
 
@@ -77,7 +72,6 @@ export class Player {
     input.on('spellPrev', () => this.cycleSpell(-1));
     input.on('slot', (i) => this.selectSlot(i));
     input.on('flashstep', () => this.flashStep());
-    input.on('signature', () => this.signature());
   }
 
   buildRig() {
@@ -155,11 +149,6 @@ export class Player {
     this.sword.position.set(0.15,-0.2,0.1);
     rArm.add(this.sword);
 
-    // Aura for shikai etc
-    this.aura = new THREE.Mesh(new THREE.SphereGeometry(1.1,16,16), new THREE.MeshBasicMaterial({ color:0x3498db, transparent:true, opacity:0, side:THREE.DoubleSide }));
-    this.aura.position.y = 1;
-    this.group.add(this.aura);
-
     this.meshBody = chestMesh;
     this.skeleton = skeleton;
   }
@@ -177,18 +166,9 @@ export class Player {
     this.pendingXp = 0;
     this.attackHitSet.clear();
     this.attackActive = false;
-    this.shikaiTimer = 0; this.blutTimer = 0;
-    this.flashCooldown = 0; this.signatureCooldown = 0;
+    this.flashCooldown = 0;
     // reset bones
     Object.values(this.bones).forEach(b => { b.rotation.set(0,0,0); });
-  }
-
-  applyRace() {
-    if (this.race === 'quincy') { this.damage = 16; this.maxMana = 80; }
-    else if (this.race === 'hollow') { this.damage = 20; this.maxHp = 120; }
-    else { this.damage = 18; }
-    if (this.hp > this.maxHp) this.hp = this.maxHp;
-    if (this.mana > this.maxMana) this.mana = this.maxMana;
   }
 
   selectSlot(i) { this.selectedSlot = i; if (i >= 1) this.currentSpell = i-1; }
@@ -206,9 +186,7 @@ export class Player {
     this.attackTimer = 0;
     this.attackActive = false;
     this.attackHitSet.clear();
-    let cd = 0.55;
-    if (this.shikaiTimer > 0) cd = 0.35;
-    this.attackCooldown = cd;
+    this.attackCooldown = 0.55;
     this.audio.play('swing');
   }
 
@@ -268,44 +246,9 @@ export class Player {
     this.audio.play('dodge');
   }
 
-  signature() {
-    if (this.state === 'dead' || this.signatureCooldown > 0) return;
-    if (this.race === 'soulreaper') {
-      if (this.mana < 30) return;
-      this.mana -= 30;
-      this.shikaiTimer = 8;
-      this.signatureCooldown = 15;
-      this.aura.material.opacity = 0.35;
-      this.aura.material.color.set(0x3498db);
-      this.effects.spawnHit(this.group.position.clone().add(new THREE.Vector3(0,1.5,0)), 0x3498db);
-      this.audio.play('cast');
-    } else if (this.race === 'quincy') {
-      if (this.mana < 25) return;
-      this.mana -= 25;
-      this.blutTimer = 5;
-      this.signatureCooldown = 12;
-      this.aura.material.opacity = 0.3;
-      this.aura.material.color.set(0xff3366);
-      this.effects.spawnHit(this.group.position.clone().add(new THREE.Vector3(0,1.5,0)), 0xff3366);
-      this.audio.play('cast');
-    } else {
-      // Hollow: Cero beam
-      if (this.mana < 40) return;
-      this.mana -= 40;
-      this.signatureCooldown = 10;
-      const origin = this.group.position.clone().add(new THREE.Vector3(0,1.4,0));
-      const fwd = this.getForward();
-      this.effects.spawnProjectile(origin, fwd, 'fireball', null);
-      // extra damage handled in combat? We'll spawn multiple
-      this.effects.spawnProjectile(origin.clone().add(new THREE.Vector3(0,0.2,0)), fwd, 'fireball', null);
-      this.audio.play('cast');
-    }
-  }
-
   takeDamage(amount, fromPos, isParryable=true) {
     if (this.iFrames > 0) return false;
     let dmg = amount;
-    if (this.blutTimer > 0) dmg *= 0.4;
     if (this.state === 'block') {
       const now = performance.now()/1000;
       const t = now - (this.blockStartTime||0);
@@ -340,17 +283,6 @@ export class Player {
   update(dt) {
     // cooldowns
     if (this.flashCooldown > 0) this.flashCooldown -= dt;
-    if (this.signatureCooldown > 0) this.signatureCooldown -= dt;
-    if (this.shikaiTimer > 0) {
-      this.shikaiTimer -= dt;
-      this.aura.material.opacity = 0.25 + Math.sin(Date.now()*0.01)*0.1;
-      if (this.shikaiTimer <= 0) { this.aura.material.opacity = 0; }
-    }
-    if (this.blutTimer > 0) {
-      this.blutTimer -= dt;
-      this.aura.material.opacity = 0.2 + Math.sin(Date.now()*0.01)*0.08;
-      if (this.blutTimer <= 0) { this.aura.material.opacity = 0; }
-    }
 
     // regen
     if (this.state !== 'block') this.stamina = Math.min(this.maxStamina, this.stamina + 18*dt);
@@ -377,7 +309,7 @@ export class Player {
 
     // movement
     const move = this.input.getMoveDir(this.yaw);
-    const baseSpeed = this.shikaiTimer > 0 ? this.speed*1.2 : this.speed;
+    const baseSpeed = this.speed;
     const speed = (this.state === 'dodge') ? 0 : (this.state === 'attack' ? baseSpeed*0.5 : baseSpeed);
     let vx = 0, vz = 0;
     if (this.state !== 'stagger' && this.state !== 'dodge') {
@@ -468,11 +400,6 @@ export class Player {
       b.root.rotation.x += (0 - b.root.rotation.x)*dt*8;
     }
 
-    // aura pulse
-    if (this.aura.material.opacity > 0) {
-      const s = 1 + Math.sin(t*4)*0.08;
-      this.aura.scale.set(s,s,s);
-    }
   }
 
   updateCamera(camera) {

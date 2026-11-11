@@ -17,7 +17,7 @@ const canvas = document.createElement('canvas');
 document.getElementById('game').appendChild(canvas);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -32,18 +32,15 @@ camera.position.set(0, 8, 12);
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.7, 0.4, 0.85);
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
-let selectedRace = 'soulreaper';
 const world = new World(scene);
 const effects = new Effects(scene);
 const audio = new AudioSys();
 const input = new Input();
 const player = new Player(scene, camera, input, audio, effects);
-player.race = selectedRace;
-player.applyRace();
 effects.player = player;
 const enemies = new EnemyManager(scene, player, audio, effects);
 const combat = new Combat(player, enemies, effects, audio);
@@ -77,8 +74,6 @@ function startGame() {
 function resetRun() {
   level = 1; xp = 0; xpNeed = 100; talentPoints = 0; wave = 1;
   player.reset();
-  player.race = selectedRace;
-  player.applyRace();
   applyLevelStats();
   player.hp = player.maxHp; player.stamina = player.maxStamina; player.mana = player.maxMana;
   enemies.clear();
@@ -100,17 +95,6 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight);
   bloom.resolution.set(window.innerWidth, window.innerHeight);
 });
-
-// Race selection
-document.querySelectorAll('.raceBtn').forEach(b => {
-  b.addEventListener('click', () => {
-    selectedRace = b.dataset.race;
-    document.querySelectorAll('.raceBtn').forEach(x => x.style.borderColor = 'rgba(255,255,255,.25)');
-    b.style.borderColor = '#f1c40f';
-  });
-});
-const defaultRaceBtn = document.querySelector('.raceBtn[data-race="soulreaper"]');
-if (defaultRaceBtn) defaultRaceBtn.style.borderColor = '#f1c40f';
 
 // Menu buttons
 document.getElementById('playBtn').addEventListener('click', startGame);
