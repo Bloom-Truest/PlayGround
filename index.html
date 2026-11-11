@@ -63,10 +63,13 @@
   </div>
   <div class="crosshair"></div>
   <div class="info">
+    <div id="race">Race: Soul Reaper</div>
+    <div id="grade">Grade: 6th</div>
     <div id="level">Lv 1</div>
     <div id="xp">XP 0/100</div>
     <div id="wave">Wave 1</div>
     <div id="spell">Spell: Fireball</div>
+    <div id="sig">Sig: Shikai (C)</div>
   </div>
   <div class="hotbar">
     <div class="slot active" data-slot="0"><span class="key">1</span>Potion</div>
@@ -92,8 +95,13 @@
 <div class="menu" id="mainMenu">
   <h1>DEEPWOKEN: ABYSSAL</h1>
   <p>Abyssal depths. Permadeath. Power.</p>
+  <div style="margin-bottom:16px;">
+    <div style="font-size:12px;letter-spacing:2px;opacity:.7;margin-bottom:6px;">CHOOSE RACE</div>
+    <button class="btn raceBtn" data-race="soulreaper" style="padding:8px 16px;font-size:13px;">Soul Reaper</button>
+    <button class="btn raceBtn" data-race="quincy" style="padding:8px 16px;font-size:13px;">Quincy</button>
+    <button class="btn raceBtn" data-race="hollow" style="padding:8px 16px;font-size:13px;">Hollow</button>
+  </div>
   <button class="btn" id="playBtn">Play</button>
-  <button class="btn" id="settingsBtn">Settings</button>
 </div>
 <div class="menu hidden" id="pauseMenu">
   <h1>PAUSED</h1>
