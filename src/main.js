@@ -63,12 +63,19 @@ function applyLevelStats() {
 player.applyLevelStats = applyLevelStats;
 
 function startGame() {
-  state = 'playing';
-  document.getElementById('mainMenu').classList.add('hidden');
-  document.getElementById('deathMenu').classList.add('hidden');
-  document.getElementById('pauseMenu').classList.add('hidden');
-  resetRun();
-  input.requestPointerLock();
+  try {
+    state = 'playing';
+    document.getElementById('mainMenu').classList.add('hidden');
+    document.getElementById('deathMenu').classList.add('hidden');
+    document.getElementById('pauseMenu').classList.add('hidden');
+    resetRun();
+  } catch (e) {
+    console.error('startGame error:', e);
+    state = 'menu';
+    document.getElementById('mainMenu').classList.remove('hidden');
+    return;
+  }
+  try { input.requestPointerLock(); } catch (e) { console.warn('pointer lock unavailable', e); }
 }
 
 function resetRun() {
@@ -98,6 +105,9 @@ window.addEventListener('resize', () => {
 
 // Menu buttons
 document.getElementById('playBtn').addEventListener('click', startGame);
+document.getElementById('mainMenu').addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'mainMenu') startGame();
+});
 document.getElementById('respawnBtn').addEventListener('click', () => { startGame(); });
 document.getElementById('quitBtn').addEventListener('click', () => {
   state = 'menu';
@@ -135,6 +145,10 @@ document.querySelectorAll('.slot').forEach(s => {
     s.classList.add('active');
   });
 });
+
+// Ensure clicking the game canvas can (re)start / lock pointer
+const canvasEl = document.querySelector('canvas');
+if (canvasEl) canvasEl.addEventListener('click', () => { if (state === 'menu') startGame(); else input.requestPointerLock(); });
 
 input.on('pause', () => {
   if (state === 'playing') { state = 'paused'; document.exitPointerLock?.(); document.getElementById('pauseMenu').classList.remove('hidden'); }
@@ -178,5 +192,6 @@ requestAnimationFrame(loop);
 
 // Expose for debugging
 window.game = { state: () => state, player, enemies };
+window.startGame = startGame;
 
 export { state };

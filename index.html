@@ -93,7 +93,7 @@
 <div class="menu" id="mainMenu">
   <h1>DEEPWOKEN: ABYSSAL</h1>
   <p>Abyssal depths. Permadeath. Power.</p>
-  <button class="btn" id="playBtn">Play</button>
+  <button class="btn" id="playBtn" onclick="if(window.startGame) window.startGame();">Play</button>
 </div>
 <div class="menu hidden" id="pauseMenu">
   <h1>PAUSED</h1>
@@ -108,8 +108,8 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    "three": "./vendor/three/build/three.module.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
   }
 }
 </script>
