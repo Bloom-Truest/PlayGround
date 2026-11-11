@@ -18,7 +18,10 @@ const state = {
   keys: {}, mouse: { x: 0, y: 0, down: false },
   touch: { moveX: 0, moveY: 0, shoot: false },
   lastDodgeTime: -99,
-  shake: 0
+  shake: 0,
+  critBuff: 0,
+  safeZone: null,
+  outcome: null
 };
 
 // UI wiring
@@ -142,6 +145,7 @@ function startGame() {
   state.time = 0; state.phase = 1;
   state.bullets = []; state.particles = []; state.shockwaves = [];
   state.comboQueue = []; state.comboTimer = 0;
+  state.critBuff = 0; state.safeZone = null;
   state.outcome = null; state.lastDodgeTime = -99;
   document.getElementById('bossName').textContent = bossData.name.toUpperCase();
   updateHud();
@@ -150,6 +154,9 @@ function cleanupGame() {
   state.running = false;
   state.player = null; state.boss = null;
   state.bullets = []; state.particles = []; state.shockwaves = [];
+  state.comboQueue = []; state.comboTimer = 0;
+  state.critBuff = 0; state.safeZone = null;
+  state.outcome = null;
 }
 function endGame(win) {
   state.running = false;
@@ -516,6 +523,7 @@ function executeAttack(id) {
 function updateBullets(dt) {
   const p = state.player;
   const boss = state.boss;
+  if (state.bullets.length > 400) state.bullets.splice(0, state.bullets.length - 400);
   for (let i = state.bullets.length - 1; i >= 0; i--) {
     const bu = state.bullets[i];
     if (bu.gravity) bu.vy += bu.gravity * dt;
