@@ -1,8 +1,8 @@
 export const CLASSES = [
   {
     id:'hero', name:'Hero', desc:'Skill-based warrior. Balanced, crits, dash.',
-    hp:500000, speed:6.5, damage:120000, fireRate:0.14, color:0x4af0ff,
-    ability:'dash', abilityCd:3, crit:0.18, critMult:2.6
+    hp:100, speed:6.5, damage:100000, fireRate:0.14, color:0x4af0ff,
+    ability:'dash', abilityCd:3, crit:0.18, critMult:1.8
   }
 ];
 
