@@ -24,7 +24,7 @@ export class Combat {
         if (dot < 0.35) continue;
         // hit
         p.attackHitSet.add(e);
-        const dmg = p.damage + (p.talents.strength*5) + (p.shikaiTimer>0 ? 10 : 0);
+        const dmg = p.damage + (p.talents.strength*5);
         const res = e.takeDamage(dmg, p.group.position);
         this.effects.spawnHit(e.group.position.clone().add(new THREE.Vector3(0,1.2,0)), 0xffcc66);
         if (res !== undefined) this.audio.play('hit');

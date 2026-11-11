@@ -23,8 +23,6 @@ export class UI {
     setBar('.po', p.posture / p.maxPosture);
     document.getElementById('level').textContent = 'Lv ' + (window.game?window.game.player?1:1:1);
     // level from main? We'll store on player
-    const raceName = p.race === 'quincy' ? 'Quincy' : p.race === 'hollow' ? 'Hollow' : 'Soul Reaper';
-    document.getElementById('race').textContent = 'Race: ' + raceName;
     const lvl = p._level || 1;
     const grades = ['6th','5th','4th','3rd','2nd','1st','Special'];
     const gi = Math.min(grades.length-1, Math.floor((lvl-1)/5));
@@ -33,8 +31,6 @@ export class UI {
     document.getElementById('xp').textContent = 'XP ' + (p._xp||0) + '/' + (p._xpNeed||100);
     document.getElementById('wave').textContent = 'Wave ' + (window._wave||1);
     document.getElementById('spell').textContent = 'Spell: ' + ['Fireball','Frost Nova','Heal'][p.currentSpell];
-    const sigName = p.race === 'quincy' ? 'Blut Vene' : p.race === 'hollow' ? 'Cero' : 'Shikai';
-    document.getElementById('sig').textContent = 'Sig: ' + sigName + ' (C)';
     document.getElementById('tp').textContent = window._talentPoints || 0;
     document.querySelectorAll('.slot').forEach((s,idx) => s.classList.toggle('active', idx === (this.player.selectedSlot||0)));
   }
