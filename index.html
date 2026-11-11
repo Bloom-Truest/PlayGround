@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Deepwoken: Abyssal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%2305070d'/><circle cx='8' cy='8' r='5' fill='%233498db'/></svg>">
+<style>
+  html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#05070d; font-family: 'Segoe UI', system-ui, sans-serif; color:#e6eef7; }
+  #game { position:fixed; inset:0; }
+  canvas { display:block; width:100%; height:100%; }
+  .ui { position:fixed; inset:0; pointer-events:none; z-index:5; }
+  .bar { position:absolute; left:16px; top:16px; width:260px; }
+  .bar .label { font-size:12px; letter-spacing:1px; opacity:.8; margin-bottom:2px; }
+  .track { height:12px; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15); border-radius:6px; overflow:hidden; margin-bottom:6px; }
+  .fill { height:100%; width:100%; transition:width .1s linear; }
+  .hp .fill { background:linear-gradient(90deg,#c0392b,#e74c3c); }
+  .st .fill { background:linear-gradient(90deg,#b7950b,#f1c40f); }
+  .mp .fill { background:linear-gradient(90deg,#1f618d,#3498db); }
+  .po .fill { background:linear-gradient(90deg,#6c3483,#a569bd); }
+  .crosshair { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:14px; height:14px; }
+  .crosshair::before,.crosshair::after { content:''; position:absolute; background:rgba(255,255,255,.85); }
+  .crosshair::before { left:6px; top:0; width:2px; height:14px; }
+  .crosshair::after { top:6px; left:0; width:14px; height:2px; }
+  .hotbar { position:absolute; left:50%; bottom:20px; transform:translateX(-50%); display:flex; gap:8px; pointer-events:auto; }
+  .slot { width:56px; height:56px; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.2); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:10px; cursor:pointer; }
+  .slot.active { border-color:#f1c40f; box-shadow:0 0 8px #f1c40f; }
+  .slot .key { position:absolute; top:2px; left:4px; font-size:9px; opacity:.7; }
+  .info { position:absolute; right:16px; top:16px; text-align:right; font-size:12px; opacity:.85; }
+  .menu { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#0a1428 0%,#02040a 100%); z-index:10; pointer-events:auto; }
+  .menu h1 { font-size:48px; letter-spacing:6px; margin:0 0 8px; text-shadow:0 0 20px #3498db; }
+  .menu p { opacity:.7; margin-bottom:24px; }
+  .btn { padding:12px 32px; margin:6px; border:1px solid rgba(255,255,255,.25); background:rgba(20,40,80,.6); color:#fff; font-size:16px; letter-spacing:2px; border-radius:6px; cursor:pointer; pointer-events:auto; }
+  .btn:hover { background:rgba(40,80,140,.8); }
+  .dead { background:radial-gradient(ellipse at center,#2a0a0a 0%,#050202 100%); }
+  .hidden { display:none !important; }
+  .toast { position:absolute; left:50%; top:20%; transform:translateX(-50%); background:rgba(0,0,0,.7); padding:8px 16px; border-radius:6px; font-size:14px; opacity:0; transition:opacity .3s; }
+  .toast.show { opacity:1; }
+  .talent { position:absolute; right:16px; bottom:90px; width:220px; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15); border-radius:8px; padding:10px; font-size:12px; }
+  .talent h3 { margin:0 0 6px; font-size:13px; }
+  .talent button { width:100%; margin:3px 0; padding:6px; background:rgba(30,60,100,.6); border:1px solid rgba(255,255,255,.15); color:#fff; border-radius:4px; cursor:pointer; font-size:11px; pointer-events:auto; }
+  .mobile-controls { display:none; }
+  @media (max-width: 900px) {
+    .mobile-controls { display:block; position:fixed; inset:0; pointer-events:none; z-index:6; }
+    .joystick { position:absolute; left:20px; bottom:90px; width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); pointer-events:auto; }
+    .stick { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.25); }
+    .mob-btn { position:absolute; right:20px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; font-size:11px; pointer-events:auto; display:flex; align-items:center; justify-content:center; }
+    .mob-btn.atk { bottom:150px; }
+    .mob-btn.blk { bottom:90px; right:80px; }
+    .mob-btn.dge { bottom:90px; }
+    .mob-btn.spl { bottom:30px; }
+  }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div class="ui">
+  <div class="bar">
+    <div class="hp"><div class="label">HEALTH</div><div class="track"><div class="fill"></div></div></div>
+    <div class="st"><div class="label">STAMINA</div><div class="track"><div class="fill"></div></div></div>
+    <div class="mp"><div class="label">MANA</div><div class="track"><div class="fill"></div></div></div>
+    <div class="po"><div class="label">POSTURE</div><div class="track"><div class="fill"></div></div></div>
+  </div>
+  <div class="crosshair"></div>
+  <div class="info">
+    <div id="level">Lv 1</div>
+    <div id="xp">XP 0/100</div>
+    <div id="wave">Wave 1</div>
+    <div id="spell">Spell: Fireball</div>
+  </div>
+  <div class="hotbar">
+    <div class="slot active" data-slot="0"><span class="key">1</span>Potion</div>
+    <div class="slot" data-slot="1"><span class="key">2</span>Fireball</div>
+    <div class="slot" data-slot="2"><span class="key">3</span>Frost Nova</div>
+    <div class="slot" data-slot="3"><span class="key">4</span>Heal</div>
+  </div>
+  <div class="talent" id="talentPanel">
+    <h3>Talents (Points: <span id="tp">0</span>)</h3>
+    <button data-talent="vitality">Vitality +20 HP</button>
+    <button data-talent="strength">Strength +5 DMG</button>
+    <button data-talent="arcane">Arcane +20 MP</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+<div class="mobile-controls" id="mobileControls">
+  <div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
+  <div class="mob-btn atk" id="mbAtk">ATK</div>
+  <div class="mob-btn blk" id="mbBlk">BLK</div>
+  <div class="mob-btn dge" id="mbDge">DGE</div>
+  <div class="mob-btn spl" id="mbSpl">SPL</div>
+</div>
+<div class="menu" id="mainMenu">
+  <h1>DEEPWOKEN: ABYSSAL</h1>
+  <p>Abyssal depths. Permadeath. Power.</p>
+  <button class="btn" id="playBtn">Play</button>
+  <button class="btn" id="settingsBtn">Settings</button>
+</div>
+<div class="menu hidden" id="pauseMenu">
+  <h1>PAUSED</h1>
+  <button class="btn" id="resumeBtn">Resume</button>
+  <button class="btn" id="quitBtn">Quit to Menu</button>
+</div>
+<div class="menu hidden dead" id="deathMenu">
+  <h1>YOU DIED</h1>
+  <p id="deathMsg">The abyss claims another.</p>
+  <button class="btn" id="respawnBtn">Respawn</button>
+</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
