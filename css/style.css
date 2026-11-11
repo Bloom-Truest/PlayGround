@@ -1,0 +1,39 @@
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#05060f; color:#e6f0ff; font-family: 'Segoe UI', system-ui, sans-serif; }
+#gameCanvas { position:fixed; inset:0; width:100%; height:100%; display:block; }
+#ui { position:fixed; inset:0; pointer-events:none; z-index:10; }
+.screen, #hud, #overlay, #touchControls { pointer-events:auto; }
+
+.screen { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center, #0a1030 0%, #02030a 100%); gap:12px; }
+.screen.hidden { display:none; }
+h1 { font-size:clamp(24px,5vw,48px); letter-spacing:4px; text-shadow:0 0 20px #4af; margin:0; }
+.sub { opacity:.7; margin:0 0 10px; }
+.panel { display:flex; flex-direction:column; gap:10px; background:rgba(20,30,60,.6); padding:20px; border-radius:12px; border:1px solid #4af3; min-width:300px; }
+.panel label { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; }
+.panel select { padding:6px 10px; background:#0a1020; color:#e6f0ff; border:1px solid #4af6; border-radius:6px; min-width:180px; }
+.panel button { padding:10px 16px; background:#2a6aff; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:700; }
+.panel button:hover { background:#4a8aff; }
+.desc { max-width:420px; text-align:center; opacity:.8; font-size:13px; min-height:40px; }
+
+#hud { position:absolute; top:10px; left:10px; right:10px; display:flex; flex-direction:column; gap:6px; }
+#hud.hidden { display:none; }
+.barwrap { display:flex; align-items:center; gap:8px; font-size:12px; }
+.bar { flex:1; height:14px; background:rgba(0,0,0,.6); border:1px solid #4af4; border-radius:7px; overflow:hidden; }
+.bar.boss { border-color:#f444; }
+.bar > div { height:100%; width:100%; background:linear-gradient(90deg,#2a6aff,#4af); transition:width .1s; }
+.bar.boss > div { background:linear-gradient(90deg,#a00,#f44); }
+#phaseText { font-size:13px; color:#ffd; text-shadow:0 0 8px #000; }
+#infoText { font-size:12px; color:#9cf; }
+
+#overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,.75); gap:12px; }
+#overlay.hidden { display:none; }
+#overlayTitle { font-size:32px; font-weight:800; }
+#overlayMsg { max-width:500px; text-align:center; opacity:.85; }
+#overlay button { padding:10px 20px; background:#2a6aff; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:700; }
+
+#touchControls { position:absolute; bottom:10px; left:10px; right:10px; display:flex; justify-content:space-between; align-items:flex-end; }
+#touchControls.hidden { display:none; }
+.joystick { width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.08); border:2px solid #4af4; position:relative; touch-action:none; }
+#stick { width:44px; height:44px; border-radius:50%; background:#4af; position:absolute; left:33px; top:33px; }
+.touchbtn { padding:14px 18px; background:rgba(42,106,255,.7); color:#fff; border:none; border-radius:10px; font-weight:700; touch-action:manipulation; }
+@media (min-width:900px){ #touchControls { display:none !important; } }

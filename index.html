@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bullet Hell Boss Fighter</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="ui">
+  <div id="titleScreen" class="screen">
+    <h1>BULLET HELL BOSS FIGHTER</h1>
+    <p class="sub">3D Boss Rush</p>
+    <div class="panel">
+      <label>Class
+        <select id="classSelect"></select>
+      </label>
+      <label>Boss
+        <select id="bossSelect"></select>
+      </label>
+      <label>Difficulty
+        <select id="diffSelect"></select>
+      </label>
+      <button id="startBtn">START FIGHT</button>
+    </div>
+    <div id="classDesc" class="desc"></div>
+  </div>
+
+  <div id="hud" class="hidden">
+    <div class="barwrap"><span>PLAYER</span><div class="bar"><div id="playerHpBar"></div></div><span id="playerHpText"></span></div>
+    <div class="barwrap"><span id="bossName">BOSS</span><div class="bar boss"><div id="bossHpBar"></div></div><span id="bossHpText"></span></div>
+    <div id="phaseText"></div>
+    <div id="infoText"></div>
+  </div>
+
+  <div id="overlay" class="hidden">
+    <div id="overlayTitle"></div>
+    <div id="overlayMsg"></div>
+    <button id="overlayBtn">Continue</button>
+  </div>
+
+  <div id="touchControls" class="hidden">
+    <div id="joystick" class="joystick"><div id="stick"></div></div>
+    <button id="shootBtn" class="touchbtn">SHOOT</button>
+    <button id="abilityBtn" class="touchbtn">ABILITY</button>
+  </div>
+</div>
+<canvas id="gameCanvas"></canvas>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
