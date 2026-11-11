@@ -349,12 +349,11 @@ function firePlayer(p) {
   const dir = new THREE.Vector3().subVectors(boss.pos, p.pos).normalize();
   const spread = 0.04;
   const d = dir.clone().add(new THREE.Vector3((Math.random() - 0.5) * spread, 0, (Math.random() - 0.5) * spread)).normalize();
-  const b = mkBullet(p.pos.clone().add(new THREE.Vector3(0, 0.5, 0)), d.multiplyScalar(24), cls.color, 'player', cls.damage, 0.2, cls.homing);
+  const b = mkBullet(p.pos.clone().add(new THREE.Vector3(0, 0.5, 0)), d.multiplyScalar(24), cls.color, 'player', 1, 0.2, cls.homing);
   if (b && cls.id === 'hero') {
-    // occasional second shot
     if (Math.random() < 0.25) {
       const d2 = dir.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.12, 0, (Math.random() - 0.5) * 0.12)).normalize();
-      mkBullet(p.pos.clone().add(new THREE.Vector3(0, 0.5, 0)), d2.multiplyScalar(24), cls.color, 'player', cls.damage * 0.6, 0.16, cls.homing);
+      mkBullet(p.pos.clone().add(new THREE.Vector3(0, 0.5, 0)), d2.multiplyScalar(24), cls.color, 'player', 0.6, 0.16, cls.homing);
     }
   }
 }
@@ -399,7 +398,7 @@ function updateBoss(dt) {
   if (b.flying) {
     b.flyTimer -= dt;
     b.mesh.position.y = 4 + Math.sin(state.time * 2) * 0.6;
-    if (b.flyTimer <= 0) { b.flying = false; spawnShockwave(b.pos, 0x00e5ff, 10, 10, 80000); }
+    if (b.flyTimer <= 0) { b.flying = false; spawnShockwave(b.pos, 0x00e5ff, 10, 10, 20); }
   } else {
     b.mesh.position.y += (1.5 - b.mesh.position.y) * 0.1;
   }
@@ -420,7 +419,7 @@ function updateBoss(dt) {
       const sp = 14 * diff.speed;
       b.pos.x += (dx / (d || 1)) * sp * dt;
       b.pos.z += (dz / (d || 1)) * sp * dt;
-      if (b.dashTimer <= 0) spawnShockwave(b.pos, 0x00e5ff, 8, 9, 60000);
+      if (b.dashTimer <= 0) spawnShockwave(b.pos, 0x00e5ff, 8, 9, 15);
     }
   }
 
@@ -586,7 +585,7 @@ function pushRiptide() {
         const pos = b.pos.clone().add(new THREE.Vector3(Math.sin(ang) * 1.6, 0, Math.cos(ang) * 1.6));
         mkBullet(pos, v, col, 'boss', 2, 0.28);
       }
-      spawnShockwave(b.pos, 0x00e5ff, 9, 7, 50000);
+      spawnShockwave(b.pos, 0x00e5ff, 9, 7, 12);
     }));
   }
   // tsunami
@@ -729,7 +728,7 @@ function updateBullets(dt) {
         let dmg = bu.damage * p.damage;
         if (boss.weakPoint) {
           const wd = pos.distanceTo(boss.weakPoint.getWorldPosition(_v));
-          if (wd < 1.1) dmg *= 2.8;
+          if (wd < 1.1) dmg *= 2.0;
         }
         if (Math.random() < p.cls.crit + (state.critBuff > 0 ? 0.2 : 0)) dmg *= p.cls.critMult;
         boss.hp -= dmg;
