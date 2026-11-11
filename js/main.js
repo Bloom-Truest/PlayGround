@@ -67,7 +67,7 @@ const state = {
   keys: {}, mouse: { x: 0, y: 0, down: false },
   touch: { moveX: 0, moveY: 0, shoot: false },
   abilityCd: 0, phaseTimer: 0, invuln: 0,
-  playerFireCd: 0, shake: 0, critBuff: 0
+  playerFireCd: 0, shake: 0, critBuff: 0, lastDodgeTime: -99, posture: 0
 };
 
 const classSelect = document.getElementById('classSelect');
@@ -158,7 +158,7 @@ function makePlayer(cls) {
 
 function makeBoss(bossData, diff) {
   const g = new THREE.Group();
-  const b = { mesh: g, data: bossData, diff, hp: bossData.baseHp * diff.mult, maxHp: bossData.baseHp * diff.mult, phase: 1, pos: g.position, attackTimer: 2, weakPoint: null, azure: false, dashTimer: 0, walkSpeed: 2.2, flying: false, flyTimer: 0, waterWings: null, helmet: null, hammer: null };
+  const b = { mesh: g, data: bossData, diff, hp: bossData.baseHp * diff.mult, maxHp: bossData.baseHp * diff.mult, phase: 1, pos: g.position, attackTimer: 2, weakPoint: null, azure: false, dashTimer: 0, walkSpeed: 2.2, flying: false, flyTimer: 0, waterWings: null, helmet: null, hammer: null, posture: 0, maxPosture: 100, stunnedTimer: 0, recoveryTimer: 0, telegraph: null, telegraphMesh: null, perilous: false, lastDodgeTime: -99 };
   buildBossVisual(b);
   g.position.set(0, 1.5, -10);
   scene.add(g);
@@ -184,7 +184,11 @@ function buildBossVisual(b) {
   head.castShadow = true;
   b.mesh.add(head);
 
-  // aqua helmet
+  // black helmet (inner)
+  const blackHelm = new THREE.Mesh(new THREE.SphereGeometry(0.92, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: 0x050505, emissive: 0x111111, emissiveIntensity: 0.4, metalness: 0.9, roughness: 0.3 }));
+  blackHelm.position.set(0, 2.05, 0.2);
+  b.mesh.add(blackHelm);
+  // aqua helmet (outer)
   const helm = new THREE.Mesh(new THREE.SphereGeometry(0.95, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00aaff, emissiveIntensity: 0.7, metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.75 }));
   helm.position.set(0, 2.1, 0.2);
   b.mesh.add(helm);
@@ -228,7 +232,7 @@ function buildBossVisual(b) {
   }
 
   if (azure) {
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.6, 12), new THREE.MeshBasicMaterial({ color: 0x0088ff, transparent: true, opacity: 0.7 }));
+    const flame = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 3.0), new THREE.MeshBasicMaterial({ color: 0x0088ff, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
     flame.position.set(0, 3.0, 0);
     b.mesh.add(flame);
     const outline = new THREE.Mesh(new THREE.SphereGeometry(1.9, 16, 16), new THREE.MeshBasicMaterial({ color: 0x00aaff, wireframe: true, transparent: true, opacity: 0.3 }));
@@ -241,7 +245,7 @@ function buildBossVisual(b) {
 }
 
 // ---------- Input ----------
-window.addEventListener('keydown', e => { state.keys[e.key.toLowerCase()] = true; if (e.key === ' ') { e.preventDefault(); tryAbility(); } });
+window.addEventListener('keydown', e => { state.keys[e.key.toLowerCase()] = true; if (e.key === ' ') { e.preventDefault(); tryAbility(); state.lastDodgeTime = state.time; } if (e.key.toLowerCase() === 'e') { tryParry(); } });
 window.addEventListener('keyup', e => { state.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { state.mouse.x = (e.clientX / window.innerWidth) * 2 - 1; state.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1; });
 canvas.addEventListener('mousedown', e => { state.mouse.down = true; });
@@ -375,6 +379,35 @@ function tryAbility() {
     spawnShockwave(p.pos, cls.color, 4, 8, 0);
   }
 }
+function tryParry() {
+  if (!state.running) return;
+  const b = state.boss;
+  if (b.stunnedTimer > 0) {
+    // finisher
+    const dmg = 500000;
+    b.hp -= dmg;
+    spawnParticles(b.pos, 0xffff44, 30, 6);
+    spawnShockwave(b.pos, 0xffff44, 12, 10, 0);
+    b.stunnedTimer = 0;
+    b.posture = 0;
+    if (b.hp <= 0) { b.hp = 0; endGame(true); }
+    return;
+  }
+  // parry window: active if telegraph just finished (recovery/active) 
+  if (b.telegraph) return; // can't parry during wind-up
+  if (b.perilous) { /* can't parry perilous */ state.invuln = 0; return; }
+  // allow parry during recovery or just after attack
+  if (b.recoveryTimer > 0 || b.attackTimer > 1.5) {
+    b.posture = Math.min(b.maxPosture, b.posture + 18);
+    state.invuln = 0.35;
+    spawnParticles(state.player.pos, 0x00ffff, 12, 3);
+    if (b.posture >= b.maxPosture) {
+      b.stunnedTimer = 3.0;
+      b.posture = 0;
+      spawnParticles(b.pos, 0xffff44, 40, 6);
+    }
+  }
+}
 
 // ---------- Boss update ----------
 function updateBoss(dt) {
@@ -427,19 +460,50 @@ function updateBoss(dt) {
   if (b.hammer) b.hammer.rotation.z = Math.sin(state.time * 2.5) * 0.7;
   if (b.waterWings) b.waterWings.rotation.y = Math.sin(state.time * 1.5) * 0.25;
 
-  // attack timer
-  b.attackTimer -= dt;
-  if (state.comboQueue.length > 0) {
-    state.comboTimer -= dt;
-    if (state.comboTimer <= 0) {
-      const next = state.comboQueue.shift();
-      executeAttack(next);
-      state.comboTimer = 0.45;
-      // combo extender dash
-      b.dashTimer = 0.35;
-    }
+  // stunned
+  if (b.stunnedTimer > 0) {
+    b.stunnedTimer -= dt;
+    b.mesh.rotation.y += dt * 2;
+    if (b.stunnedTimer <= 0) { b.posture = 0; b.mesh.rotation.y = 0; }
+    // no attacks/movement while stunned
+    if (b.telegraphMesh) { scene.remove(b.telegraphMesh); b.telegraphMesh = null; b.telegraph = null; }
   } else {
-    if (b.attackTimer <= 0) chooseAttack();
+    // telegraph handling
+    if (b.telegraph) {
+      b.telegraph.timer -= dt;
+      if (b.telegraphMesh) {
+        b.telegraphMesh.position.set(b.pos.x, 0.05, b.pos.z);
+        b.telegraphMesh.material.opacity = 0.4 + Math.sin(state.time * 10) * 0.3;
+      }
+      if (b.telegraph.timer <= 0) {
+        // active
+        const id = b.telegraph.id;
+        if (b.telegraphMesh) { scene.remove(b.telegraphMesh); b.telegraphMesh = null; }
+        b.telegraph = null;
+        executeAttack(id);
+        b.recoveryTimer = 0.7;
+        // combo handling
+        if (state.comboQueue.length > 0) {
+          state.comboTimer = 0.45;
+        }
+      }
+    } else {
+      // recovery
+      if (b.recoveryTimer > 0) b.recoveryTimer -= dt;
+      // combo queue
+      if (state.comboQueue.length > 0) {
+        state.comboTimer -= dt;
+        if (state.comboTimer <= 0) {
+          const next = state.comboQueue.shift();
+          const w = b.phase === 1 ? 1.0 : (b.phase === 2 ? 0.8 : 0.6);
+          startTelegraph(b, next, b.diff, w);
+          state.comboTimer = 99;
+        }
+      } else {
+        b.attackTimer -= dt;
+        if (b.attackTimer <= 0) chooseAttack();
+      }
+    }
   }
 
   // safe zone
@@ -464,22 +528,39 @@ function chooseAttack() {
   const attacks = getAttackList(b);
   const avail = attacks.filter(a => !a.phase || a.phase.includes(b.phase));
   if (avail.length === 0) return;
-  // rare combo
+  // pick attack
+  let chosen;
   if (Math.random() < 0.15) {
     const comboLen = 2 + (Math.random() < 0.4 ? 1 : 0);
     const seq = [];
     for (let i = 0; i < comboLen; i++) seq.push(avail[Math.floor(Math.random() * avail.length)].id);
     state.comboQueue = seq.slice(1);
-    state.comboTimer = 0;
-    executeAttack(seq[0]);
+    state.comboTimer = 0.45;
+    chosen = seq[0];
     b.dashTimer = 0.4;
   } else {
-    const a = avail[Math.floor(Math.random() * avail.length)];
-    executeAttack(a.id);
+    chosen = avail[Math.floor(Math.random() * avail.length)].id;
   }
-  const baseCd = 0.85 / diff.speed;
-  b.attackTimer = (0.7 + Math.random() * 0.5) * (1 / diff.speed);
-  if (b.phase === 3) b.attackTimer *= 0.7;
+  // wind-up duration
+  const windup = b.phase === 1 ? 1.0 : (b.phase === 2 ? 0.8 : 0.6);
+  startTelegraph(b, chosen, diff, windup);
+}
+
+function startTelegraph(b, id, diff, windup) {
+  const w = windup || (b.phase === 1 ? 1.0 : (b.phase === 2 ? 0.8 : 0.6));
+  const perilous = /exec|enrage|collapse|overload/.test(id);
+  b.perilous = perilous;
+  if (b.telegraphMesh) { scene.remove(b.telegraphMesh); b.telegraphMesh = null; }
+  const tgeo = new THREE.RingGeometry(2.5, 3.0, 40);
+  const tmat = new THREE.MeshBasicMaterial({ color: perilous ? 0xff2222 : 0xffaa00, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+  const tmesh = new THREE.Mesh(tgeo, tmat);
+  tmesh.rotation.x = -Math.PI / 2;
+  tmesh.position.set(b.pos.x, 0.05, b.pos.z);
+  scene.add(tmesh);
+  b.telegraphMesh = tmesh;
+  b.telegraph = { id, timer: w, perilous };
+  b.attackTimer = 99;
+  if (state.time - state.lastDodgeTime < 0.5) b.telegraph.timer += 0.3;
 }
 
 function getAttackList(b) {
@@ -730,6 +811,7 @@ function updateBullets(dt) {
           const wd = pos.distanceTo(boss.weakPoint.getWorldPosition(_v));
           if (wd < 1.1) dmg *= 2.0;
         }
+        if (boss.recoveryTimer > 0) dmg *= 1.5;
         if (Math.random() < p.cls.crit + (state.critBuff > 0 ? 0.2 : 0)) dmg *= p.cls.critMult;
         boss.hp -= dmg;
         spawnParticles(pos, boss.data.accent, 8, 4);
@@ -797,6 +879,8 @@ function updateHud() {
   document.getElementById('bossHpBar').style.width = (b.hp / b.maxHp * 100) + '%';
   document.getElementById('bossHpText').textContent = fmtM(b.hp) + '/' + fmtM(b.maxHp);
   document.getElementById('phaseText').textContent = 'Phase ' + b.phase + (b.phase === 3 ? ' — AZURE ENRAGED' : (b.phase === 2 ? ' — WATER WINGS' : ''));
+  const pb = document.getElementById('postureBar');
+  if (pb) { pb.style.width = (b.posture / b.maxPosture * 100) + '%'; document.getElementById('postureText').textContent = Math.ceil(b.posture) + '/' + b.maxPosture; }
 }
 
 let last = performance.now();
