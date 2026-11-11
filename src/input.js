@@ -22,6 +22,8 @@ export class Input {
       if (e.code === 'KeyQ') this.emit('spellPrev');
       if (e.code === 'KeyE') this.emit('spellNext');
       if (e.code === 'KeyR') this.emit('cast');
+      if (e.code === 'KeyV') this.emit('flashstep');
+      if (e.code === 'KeyC') this.emit('signature');
       if (e.code === 'Digit1') { this.emit('slot',0); }
       if (e.code === 'Digit2') { this.emit('slot',1); }
       if (e.code === 'Digit3') { this.emit('slot',2); }
