@@ -586,9 +586,9 @@ function drawMenu(){
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   // title
   ctx.fillStyle='#ffd700'; ctx.font='bold 46px Arial'; ctx.textAlign='center';
-  ctx.fillText('CAPTAIN TSUBASA', W/2, 120);
+  ctx.fillText('ORIGIN ARENA', W/2, 120);
   ctx.fillStyle='#fff'; ctx.font='bold 26px Arial';
-  ctx.fillText('Rise of New Champions', W/2, 160);
+  ctx.fillText('Rise of Champions', W/2, 160);
   ctx.font='16px Arial'; ctx.fillStyle='#aaa';
   ctx.fillText('Fan-made arcade soccer', W/2, 190);
   buttons=[];
@@ -826,6 +826,7 @@ function drawPlayer(pl){
   // name label
   ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.font='10px Arial';
   ctx.fillText(pl.data.name, pl.x, pl.y+r+12);
+  if (pl.data.ovr){ ctx.fillStyle='#ffd700'; ctx.font='bold 9px Arial'; ctx.fillText('OVR '+pl.data.ovr, pl.x, pl.y+r+24); }
   // spirit bar for controlled
   if (pl.controlled){
     const bw=40, bh=4;
